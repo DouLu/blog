@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "author": "DouLu <luckyludou@gmail.com>",
+  "scripts": {
+    "dev": "umi dev",
+    "build": "prisma generate && umi build",
+    "postinstall": "umi setup",
+    "setup": "umi setup",
+    "start": "npm run dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.4.2",
+    "@supabase/supabase-js": "^2.98.0",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "umi": "^4.6.31"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/react": "^18.0.33",
+    "@types/react-dom": "^18.0.11",
+    "@umijs/plugins": "^4.6.31",
+    "prisma": "^7.4.2",
+    "tailwindcss": "^3",
+    "typescript": "^5.0.3"
+  }
+}
