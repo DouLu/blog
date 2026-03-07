@@ -13,6 +13,7 @@ const supabaseKey = process.env.SUPABASE_KEY;
 if (supabaseUrl && supabaseKey) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   const { data: user, error } = await supabase.auth.getUser();
+  console.log(user, error);
   if (!user || error) {
     navigete("/login");
   }
