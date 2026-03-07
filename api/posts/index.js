@@ -390,7 +390,60 @@ async function posts_default(req, res) {
 
 // src/.umi/api/posts/index.ts
 var import_apiRoute = __toESM(require_apiRoute());
-var apiRoutes = [{ "path": "posts/[postId]", "id": "posts/[postId]", "file": "posts/[postId].ts", "absPath": "/posts/[postId]", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }, { "path": "posts", "id": "posts/index", "file": "posts/index.ts", "absPath": "/posts", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }, { "path": "register", "id": "register", "file": "register.ts", "absPath": "/register", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }, { "path": "login", "id": "login", "file": "login.ts", "absPath": "/login", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }];
+var apiRoutes = [{ "path": "posts/[postId]", "id": "posts/[postId]", "file": "posts/[postId].ts", "absPath": "/posts/[postId]", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }, { "path": "posts", "id": "posts/index", "file": "posts/index.ts", "absPath": "/posts", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }, { "path": "register", "id": "register", "file": "register.ts", "absPath": "/register", "__content": '// src/api/register.ts\n\nimport type { UmiApiRequest, UmiApiResponse } from "umi";\n// import { PrismaClient } from "@prisma/client";\nimport bcrypt from "bcryptjs";\nimport { signToken } from "@/utils/jwt";\n\nimport { createClient } from "@supabase/supabase-js";\nconst supabaseUrl = process.env.SUPABASE_URL;\nconst supabaseKey = process.env.SUPABASE_SECRET_KEY;\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  switch (req.method) {\n    case "POST":\n      let data = {};\n      if (supabaseUrl && supabaseKey) {\n        const supabase = createClient(supabaseUrl, supabaseKey);\n        const { data: notes } = await supabase.from("notes").select();\n        const { data: user } = await supabase\n          .from("users")\n          .select()\n          .eq("username", "admin")\n          .eq("password", "admin");\n        data = { user, notes };\n      }\n      res.status(200).json(data);\n      break;\n    default:\n      res.status(405).json({ error: "Method not allowed" });\n  }\n}\n' }, { "path": "login", "id": "login", "file": "login.ts", "absPath": "/login", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
+import { createClient } from "@supabase/supabase-js";
+// import { signToken } from '@/utils/jwt';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+
+export default async function (req: UmiApiRequest, res: UmiApiResponse) {
+  switch (req.method) {
+    case "POST":
+      const { username, password } = req.body;
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { data: user } = await supabase
+          .from("users")
+          .select()
+          .eq("username", username)
+          .eq("password", password);
+        if (user?.length) {
+          res
+            .status(200)
+            .setCookie("token", user[0].id)
+            .json({ success: true, user: user[0] });
+        } else {
+          res
+            .status(200)
+            .json({ success: false, message: "Invalid credentials" });
+        }
+      }
+      break;
+    case "GET":
+      // \u7528ID\u6765\u4EE3\u66FFtoken
+      console.log("req.cookies------", req.cookies.token);
+      const id = req.cookies.token;
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { data: user } = await supabase
+          .from("users")
+          .select()
+          .eq("id", id);
+        if (user?.length) {
+          res.status(200).json({ success: true, user: user[0] });
+        } else {
+          res
+            .status(200)
+            .json({ success: false, message: "Invalid credentials" });
+        }
+      }
+      break;
+    default:
+      res.status(405).json({ error: "Method not allowed" });
+  }
+}
+` }];
 var posts_default2 = async (req, res) => {
   const umiReq = new import_apiRoute.UmiApiRequest(req, apiRoutes);
   await umiReq.readBody();

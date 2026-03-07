@@ -3,7 +3,7 @@
   "author": "DouLu <luckyludou@gmail.com>",
   "scripts": {
     "dev": "umi dev",
-    "build": "prisma generate && umi build",
+    "build": "umi build",
     "postinstall": "umi setup",
     "setup": "umi setup",
     "start": "npm run dev"

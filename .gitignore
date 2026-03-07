@@ -8,3 +8,5 @@
 /dist
 .swc
 .turbopack
+.vercel
+.env*.local
