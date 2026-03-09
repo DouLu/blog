@@ -8441,12 +8441,12 @@ var require_apiRoute = __commonJS({
   }
 });
 
-// src/.umi/api/register.ts
-var register_exports = {};
-__export(register_exports, {
-  default: () => register_default2
+// src/.umi/api/user.ts
+var user_exports = {};
+__export(user_exports, {
+  default: () => user_default2
 });
-module.exports = __toCommonJS(register_exports);
+module.exports = __toCommonJS(user_exports);
 
 // src/.umi/api/_middlewares.ts
 var middlewares_default = async (req, res, next) => {
@@ -13010,27 +13010,33 @@ function shouldShowDeprecationWarning() {
 }
 if (shouldShowDeprecationWarning()) console.warn("\u26A0\uFE0F  Node.js 18 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 20 or later. For more information, visit: https://github.com/orgs/supabase/discussions/37217");
 
-// src/api/register.ts
+// src/api/user.ts
 var supabaseUrl = process.env.SUPABASE_URL;
 var supabaseKey = process.env.SUPABASE_SECRET_KEY;
-async function register_default(req, res) {
+async function user_default(req, res) {
   switch (req.method) {
-    case "POST":
-      let data = {};
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { data: notes } = await supabase.from("notes").select();
-        const { data: user } = await supabase.from("users").select().eq("username", "admin").eq("password", "admin");
-        data = { user, notes };
+    case "GET":
+      if (!req?.cookies?.token) {
+        res.status(200).json({ success: false, message: "\u672A\u767B\u5F55" });
+      } else {
+        const id = req.cookies.token;
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          try {
+            const { data } = await supabase.from("users").select().eq("id", id).single();
+            res.status(200).json({ success: true, data });
+          } catch (error) {
+            res.status(500).json({ success: false, message: "\u63A5\u53E3\u62A5\u9519", error });
+          }
+        }
       }
-      res.status(200).json(data);
       break;
     default:
       res.status(405).json({ error: "Method not allowed" });
   }
 }
 
-// src/.umi/api/register.ts
+// src/.umi/api/user.ts
 var import_apiRoute = __toESM(require_apiRoute());
 var apiRoutes = [{ "path": "posts/[postId]", "id": "posts/[postId]", "file": "posts/[postId].ts", "absPath": "/posts/[postId]", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
 import { createClient } from "@supabase/supabase-js";
@@ -13196,10 +13202,10 @@ export default async function (req: UmiApiRequest, res: UmiApiResponse) {
   }
 }
 ` }];
-var register_default2 = async (req, res) => {
+var user_default2 = async (req, res) => {
   const umiReq = new import_apiRoute.UmiApiRequest(req, apiRoutes);
   await umiReq.readBody();
   const umiRes = new import_apiRoute.UmiApiResponse(res);
   await new Promise((resolve) => middlewares_default(umiReq, umiRes, resolve));
-  await register_default(umiReq, umiRes);
+  await user_default(umiReq, umiRes);
 };

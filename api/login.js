@@ -13016,27 +13016,19 @@ var supabaseKey = process.env.SUPABASE_SECRET_KEY;
 async function login_default(req, res) {
   switch (req.method) {
     case "POST":
-      const { username, password } = req.body;
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { data: user } = await supabase.from("users").select().eq("username", username).eq("password", password);
-        if (user?.length) {
-          res.status(200).setCookie("token", user[0].id).json({ success: true, user: user[0] });
-        } else {
-          res.status(200).json({ success: false, message: "Invalid credentials" });
+      try {
+        const { username, password } = req.body;
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          const { data: user } = await supabase.from("users").select().eq("username", username).eq("password", password).single();
+          if (user) {
+            res.status(200).setCookie("token", user.id).json({ success: true, user });
+            return;
+          }
+          res.status(401).json({ success: false, message: "\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF" });
         }
-      }
-      break;
-    case "GET":
-      const id = req.cookies.token;
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { data: user } = await supabase.from("users").select().eq("id", id);
-        if (user?.length) {
-          res.status(200).json({ success: true, user: user[0] });
-        } else {
-          res.status(200).json({ success: false, message: "Invalid credentials" });
-        }
+      } catch (error) {
+        res.status(500).json({ success: false, message: "\u63A5\u53E3\u62A5\u9519", error });
       }
       break;
     default:
@@ -13046,7 +13038,96 @@ async function login_default(req, res) {
 
 // src/.umi/api/login.ts
 var import_apiRoute = __toESM(require_apiRoute());
-var apiRoutes = [{ "path": "posts/[postId]", "id": "posts/[postId]", "file": "posts/[postId].ts", "absPath": "/posts/[postId]", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }, { "path": "posts", "id": "posts/index", "file": "posts/index.ts", "absPath": "/posts", "__content": 'import type { UmiApiRequest, UmiApiResponse } from "umi";\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  res.status(400).json({ error: "This API is not implemented yet." });\n}\n' }, { "path": "register", "id": "register", "file": "register.ts", "absPath": "/register", "__content": '// src/api/register.ts\n\nimport type { UmiApiRequest, UmiApiResponse } from "umi";\n// import { PrismaClient } from "@prisma/client";\nimport bcrypt from "bcryptjs";\nimport { signToken } from "@/utils/jwt";\n\nimport { createClient } from "@supabase/supabase-js";\nconst supabaseUrl = process.env.SUPABASE_URL;\nconst supabaseKey = process.env.SUPABASE_SECRET_KEY;\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  switch (req.method) {\n    case "POST":\n      let data = {};\n      if (supabaseUrl && supabaseKey) {\n        const supabase = createClient(supabaseUrl, supabaseKey);\n        const { data: notes } = await supabase.from("notes").select();\n        const { data: user } = await supabase\n          .from("users")\n          .select()\n          .eq("username", "admin")\n          .eq("password", "admin");\n        data = { user, notes };\n      }\n      res.status(200).json(data);\n      break;\n    default:\n      res.status(405).json({ error: "Method not allowed" });\n  }\n}\n' }, { "path": "login", "id": "login", "file": "login.ts", "absPath": "/login", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
+var apiRoutes = [{ "path": "posts/[postId]", "id": "posts/[postId]", "file": "posts/[postId].ts", "absPath": "/posts/[postId]", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
+import { createClient } from "@supabase/supabase-js";
+// import { signToken } from '@/utils/jwt';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+
+export default async function (req: UmiApiRequest, res: UmiApiResponse) {
+  switch (req.method) {
+    case "GET":
+      // if (!req?.cookies?.token) {
+      //   res.status(200).json({ success: false, message: "No token provided" });
+      //   return;
+      // }
+      try {
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          const { data } = await supabase
+            .from("post")
+            .select()
+            .eq("id", req.params.postId)
+            .single();
+          res.status(200).json(data);
+        }
+      } catch (error) {
+        res.status(500).json({ success: false, message: "\u63A5\u53E3\u62A5\u9519" });
+      }
+      break;
+    default:
+      res.status(405).json({ error: "Method not allowed" });
+  }
+}
+` }, { "path": "posts", "id": "posts/index", "file": "posts/index.ts", "absPath": "/posts", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
+import { createClient } from "@supabase/supabase-js";
+// import { signToken } from '@/utils/jwt';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+
+export default async function (req: UmiApiRequest, res: UmiApiResponse) {
+  switch (req.method) {
+    case "GET":
+      // if (!req?.cookies?.token) {
+      //   res.status(200).json({ success: false, message: "No token provided" });
+      //   return;
+      // }
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        try {
+          // \u767B\u5F55\u4E86\u5219\u67E5\u770B\u81EA\u5DF1\u7684\u6587\u7AE0\uFF0C\u672A\u767B\u5F55\u53EF\u4EE5\u67E5\u770B\u6240\u6709\u6587\u7AE0\u3002
+          // \u9B3C\u624D\u903B\u8F91\uFF01\uFF01\uFF01
+          const userId = req?.cookies?.token;
+          if (userId) {
+            const { data } = await supabase
+              .from("post")
+              .select()
+              .eq("author_id", userId);
+            res.status(200).json({ success: true, data });
+          } else {
+            const { data } = await supabase.from("post").select();
+            res.status(200).json({ success: true, data });
+          }
+        } catch (error) {
+          res.status(500).json({ success: false, message: "\u63A5\u53E3\u9519\u8BEF" });
+        }
+      }
+      break;
+    default:
+      res.status(405).json({ error: "Method not allowed" });
+  }
+}
+` }, { "path": "register", "id": "register", "file": "register.ts", "absPath": "/register", "__content": '// src/api/register.ts\n\nimport type { UmiApiRequest, UmiApiResponse } from "umi";\n// import { PrismaClient } from "@prisma/client";\nimport bcrypt from "bcryptjs";\nimport { signToken } from "@/utils/jwt";\n\nimport { createClient } from "@supabase/supabase-js";\nconst supabaseUrl = process.env.SUPABASE_URL;\nconst supabaseKey = process.env.SUPABASE_SECRET_KEY;\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  switch (req.method) {\n    case "POST":\n      let data = {};\n      if (supabaseUrl && supabaseKey) {\n        const supabase = createClient(supabaseUrl, supabaseKey);\n        const { data: notes } = await supabase.from("notes").select();\n        const { data: user } = await supabase\n          .from("users")\n          .select()\n          .eq("username", "admin")\n          .eq("password", "admin");\n        data = { user, notes };\n      }\n      res.status(200).json(data);\n      break;\n    default:\n      res.status(405).json({ error: "Method not allowed" });\n  }\n}\n' }, { "path": "logout", "id": "logout", "file": "logout.ts", "absPath": "/logout", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
+import { createClient } from "@supabase/supabase-js";
+// import { signToken } from '@/utils/jwt';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+
+export default async function (req: UmiApiRequest, res: UmiApiResponse) {
+  switch (req.method) {
+    case "GET":
+      res
+        .setCookie("token", "")
+        .json({ success: true, message: "Logged out successfully" });
+      break;
+    default:
+      res.status(405).json({ error: "Method not allowed" });
+  }
+}
+` }, { "path": "login", "id": "login", "file": "login.ts", "absPath": "/login", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
 import { createClient } from "@supabase/supabase-js";
 // import { signToken } from '@/utils/jwt';
 
@@ -13056,42 +13137,63 @@ const supabaseKey = process.env.SUPABASE_SECRET_KEY;
 export default async function (req: UmiApiRequest, res: UmiApiResponse) {
   switch (req.method) {
     case "POST":
-      const { username, password } = req.body;
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { data: user } = await supabase
-          .from("users")
-          .select()
-          .eq("username", username)
-          .eq("password", password);
-        if (user?.length) {
-          res
-            .status(200)
-            .setCookie("token", user[0].id)
-            .json({ success: true, user: user[0] });
-        } else {
-          res
-            .status(200)
-            .json({ success: false, message: "Invalid credentials" });
+      try {
+        const { username, password } = req.body;
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          const { data: user } = await supabase
+            .from("users")
+            .select()
+            .eq("username", username)
+            .eq("password", password)
+            .single();
+          if (user) {
+            res
+              .status(200)
+              .setCookie("token", user.id)
+              .json({ success: true, user });
+            return;
+          }
+          res.status(401).json({ success: false, message: "\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF" });
         }
+      } catch (error) {
+        res.status(500).json({ success: false, message: "\u63A5\u53E3\u62A5\u9519", error });
       }
       break;
+    default:
+      res.status(405).json({ error: "Method not allowed" });
+  }
+}
+` }, { "path": "user", "id": "user", "file": "user.ts", "absPath": "/user", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
+import { createClient } from "@supabase/supabase-js";
+// import { signToken } from '@/utils/jwt';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+
+export default async function (req: UmiApiRequest, res: UmiApiResponse) {
+  switch (req.method) {
     case "GET":
-      // \u7528ID\u6765\u4EE3\u66FFtoken
-      console.log("req.cookies------", req.cookies.token);
-      const id = req.cookies.token;
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { data: user } = await supabase
-          .from("users")
-          .select()
-          .eq("id", id);
-        if (user?.length) {
-          res.status(200).json({ success: true, user: user[0] });
-        } else {
-          res
-            .status(200)
-            .json({ success: false, message: "Invalid credentials" });
+      if (!req?.cookies?.token) {
+        // res.status(200).json({ success: false, message: "No token provided" });
+        res.status(200).json({ success: false, message: "\u672A\u767B\u5F55" });
+      } else {
+        // \u7528ID\u6765\u4EE3\u66FFtoken
+        const id = req.cookies.token;
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          try {
+            const { data } = await supabase
+              .from("users")
+              .select()
+              .eq("id", id)
+              .single();
+            res.status(200).json({ success: true, data });
+          } catch (error) {
+            res
+              .status(500)
+              .json({ success: false, message: "\u63A5\u53E3\u62A5\u9519", error });
+          }
         }
       }
       break;

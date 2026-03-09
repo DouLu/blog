@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styles from "./login.less";
 import { useNavigate } from "umi";
 
@@ -7,6 +7,13 @@ export default function Page() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [disabled, setDisabled] = React.useState(true);
+
+  useEffect(() => {
+    if (!document.cookie.includes("token")) {
+      alert("请先登录");
+      navigate("/login");
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,14 +32,13 @@ export default function Page() {
     });
     const { success, user, message } = await res.json();
     if (success) {
-      alert("登录成功");
-      navigate("/"); // 登录成功后跳转到主页
+      navigate("/", { replace: true }); // 登录成功后跳转到主页
     } else {
       alert(`登录失败，用户名或密码错误。${message}`);
     }
   };
   return (
-    <div>
+    <div className={styles.login}>
       <h1 className={styles.title}>Page login</h1>
       <div className={styles.loginForm}>
         <form onSubmit={handleLogin}>

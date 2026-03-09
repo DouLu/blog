@@ -1,4 +1,41 @@
-
-.title {
-  background: rgb(242, 121, 206);
+.create {
+  width: 620px;
+  margin: 0 auto;
+  .title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 30px;
+  }
+  .postForm {
+    div {
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 18px;
+    }
+    input,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      float: right;
+      padding: 10px 20px;
+      background-color: #1890ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      &.disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+.clear {
+  overflow: hidden;
 }

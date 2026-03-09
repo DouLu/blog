@@ -1,62 +1,106 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import yayJpg from "../assets/yay.jpg";
 import styles from "./index.less";
+import { useNavigate } from "umi";
 
 export default function HomePage() {
-  const [userData, setUserData] = useState<{
+  const navigate = useNavigate();
+
+  const [userInfo, setUserInfo] = useState<{
     id: number;
     username: string;
     email: string;
   } | null>();
+  const [posts, setPosts] = useState<
+    { id: number; title: string; imageUrl: string }[]
+  >([]);
 
-  const [list, setList] = useState<{ id: number; title: string }[]>([]);
-  const handleRe = async () => {
-    fetch("/api/login", { method: "GET" })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("data---------", data);
-        setUserData(data.user);
-      });
-
-    const res = await fetch("/api/register", {
-      method: "POST",
+  const refresh = async () => {
+    const resUserInfo = await fetch("/api/user", {
+      method: "GET",
     });
-    const { notes, user } = await res.json();
-    console.log("data------", notes, user);
-    setList(notes);
+    const dataUserInfo = await resUserInfo.json();
+    if (dataUserInfo.success) {
+      setUserInfo(dataUserInfo.data);
+    } else {
+      setUserInfo(null);
+    }
+    const res = await fetch("/api/posts", {
+      method: "GET",
+    });
+    const { success, data } = await res.json();
+    if (success) {
+      setPosts(data);
+    }
   };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const handleRegister = async () => {
+    navigate("/register");
+  };
+
+  const handleLogin = async () => {
+    navigate("/login");
+  };
+
   const logOut = async () => {
     await fetch("/api/logout", {
-      method: "POST",
-      body: JSON.stringify(userData),
+      method: "GET",
     });
     alert("退出登录成功");
+    refresh();
   };
   return (
-    <div>
-      <h2>Yay! Welcome to umi!</h2>
-      <p>
-        <img src={yayJpg} width="388" />
-      </p>
-      <p>
-        To get started, edit <code>pages/index.tsx</code> and save to reload.
-      </p>
-      <div>
-        <div className={styles.blueBtn} onClick={handleRe}>
-          register
+    <div className={styles.home}>
+      <div className={`${styles.navs} ${styles.clear}`}>
+        {userInfo ? (
+          <div>
+            <span>欢迎，{userInfo.username}</span>
+            <button onClick={logOut}>退出登录</button>
+            <button
+              onClick={() => {
+                navigate("/posts/create");
+              }}
+            >
+              发表文章
+            </button>
+          </div>
+        ) : (
+          <div>
+            <button onClick={handleRegister}>注册</button>
+            <button onClick={handleLogin}>登录</button>
+          </div>
+        )}
+      </div>
+      <div className={styles.container}>
+        <div className={`${styles.user} ${styles.clear}`}>
+          {userInfo ? (
+            <div className={styles.userInfo}>
+              <h1>用户信息</h1>
+              <p>用户名：{userInfo?.username}</p>
+              <p>邮箱：{userInfo?.email}</p>
+            </div>
+          ) : (
+            ""
+          )}
         </div>
-        <div className={styles.blueBtn} onClick={logOut}>
-          log out
-        </div>
-        <p>notes表的数据</p>
-        <ul>
-          {list?.map((item) => (
-            <li key={item.id}>
-              <p>{item.id}</p>
-              <p>{item.title}</p>
-            </li>
+        <div className={`${styles.posts} ${styles.clear}`}>
+          {posts?.map((post) => (
+            <div
+              onClick={() => {
+                navigate(`/posts/${post.id}`);
+              }}
+              key={post.id}
+              className={`${styles.post} ${styles.clear}`}
+            >
+              <h2>{post.title}</h2>
+              <img src={post.imageUrl} alt={post.title} />
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   );
