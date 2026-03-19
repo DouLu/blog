@@ -1,0 +1,24 @@
+div,
+input {
+  margin-left: 10px;
+}
+.caretColor {
+  > input {
+    border: solid 1px #999;
+    outline-color: #999;
+    padding-left: 20px;
+    caret-color: rgb(42, 89, 217);
+    &:out-of-range {
+      border-color: red; // 无效
+    }
+    &:in-range {
+      border-color: rgb(32, 18, 230); // 无效
+    }
+  }
+}
+.img:hover {
+  // 鼠标覆盖则添加灰色滤镜
+  filter: grayscale(5);
+  // 毛玻璃效果 无效
+  backdrop-filter: blur(10px);
+}

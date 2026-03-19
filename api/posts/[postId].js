@@ -13055,7 +13055,7 @@ export default async function (req: UmiApiRequest, res: UmiApiResponse) {
             .select()
             .eq("id", req.params.postId)
             .single();
-          res.status(200).json(data);
+          res.status(200).json({ success: true, data });
         }
       } catch (error) {
         res.status(500).json({ success: false, message: "\u63A5\u53E3\u62A5\u9519" });
@@ -13073,14 +13073,28 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SECRET_KEY;
 
 export default async function (req: UmiApiRequest, res: UmiApiResponse) {
-  switch (req.method) {
-    case "GET":
-      // if (!req?.cookies?.token) {
-      //   res.status(200).json({ success: false, message: "No token provided" });
-      //   return;
-      // }
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
+  if (supabaseUrl && supabaseKey) {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    // \u67E5\u7528\u6237\u4FE1\u606F
+    const userId = req?.cookies?.token;
+    let userInfo;
+    if (userId) {
+      try {
+        const { data } = await supabase
+          .from("users")
+          .select()
+          .eq("id", userId)
+          .single();
+        userInfo = data;
+      } catch (error) {}
+    }
+    switch (req.method) {
+      case "GET":
+        // if (!req?.cookies?.token) {
+        //   res.status(200).json({ success: false, message: "No token provided" });
+        //   return;
+        // }
+
         try {
           // \u767B\u5F55\u4E86\u5219\u67E5\u770B\u81EA\u5DF1\u7684\u6587\u7AE0\uFF0C\u672A\u767B\u5F55\u53EF\u4EE5\u67E5\u770B\u6240\u6709\u6587\u7AE0\u3002
           // \u9B3C\u624D\u903B\u8F91\uFF01\uFF01\uFF01
@@ -13098,10 +13112,37 @@ export default async function (req: UmiApiRequest, res: UmiApiResponse) {
         } catch (error) {
           res.status(500).json({ success: false, message: "\u63A5\u53E3\u9519\u8BEF" });
         }
-      }
-      break;
-    default:
-      res.status(405).json({ error: "Method not allowed" });
+        break;
+      case "POST":
+        const reqData = JSON.parse(req.body);
+        const { data, error } = await supabase.from("post").select();
+        if (data) {
+          const rowData = {
+            ...reqData,
+            id: data.length + 1,
+            author_id: userInfo.id,
+            author: userInfo.username,
+            created_at: new Date(),
+          };
+          try {
+            const { data, error } = await supabase.from("post").insert(rowData);
+            if (error) {
+              res.status(200).json({ success: false, message: error });
+            } else {
+              res
+                .status(200)
+                .json({ success: true, message: "\u6587\u7AE0\u53D1\u8868\u6210\u529F\uFF01" });
+            }
+          } catch (error) {
+            res.status(500).json({ error: "\u63A5\u53E3\u9519\u8BEF" });
+          }
+        }
+        break;
+      default:
+        res.status(405).json({ error: "Method not allowed" });
+    }
+  } else {
+    res.status(405).json({ error: "Method not allowed" });
   }
 }
 ` }, { "path": "register", "id": "register", "file": "register.ts", "absPath": "/register", "__content": '// src/api/register.ts\n\nimport type { UmiApiRequest, UmiApiResponse } from "umi";\n// import { PrismaClient } from "@prisma/client";\nimport bcrypt from "bcryptjs";\nimport { signToken } from "@/utils/jwt";\n\nimport { createClient } from "@supabase/supabase-js";\nconst supabaseUrl = process.env.SUPABASE_URL;\nconst supabaseKey = process.env.SUPABASE_SECRET_KEY;\n\nexport default async function (req: UmiApiRequest, res: UmiApiResponse) {\n  switch (req.method) {\n    case "POST":\n      let data = {};\n      if (supabaseUrl && supabaseKey) {\n        const supabase = createClient(supabaseUrl, supabaseKey);\n        const { data: notes } = await supabase.from("notes").select();\n        const { data: user } = await supabase\n          .from("users")\n          .select()\n          .eq("username", "admin")\n          .eq("password", "admin");\n        data = { user, notes };\n      }\n      res.status(200).json(data);\n      break;\n    default:\n      res.status(405).json({ error: "Method not allowed" });\n  }\n}\n' }, { "path": "logout", "id": "logout", "file": "logout.ts", "absPath": "/logout", "__content": `import type { UmiApiRequest, UmiApiResponse } from "umi";
